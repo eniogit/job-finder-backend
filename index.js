@@ -61,7 +61,7 @@ server.post('/api/jobs', async (req, res, next) => {
 server.get('/api/jobs', async (req, res, next) => {
   try {
     const searchSchema = joi.object({
-      query: joi.string(),
+      query: joi.string().optional(),
     })
     const { query } = await searchSchema.validateAsync(req.query)
     console.log(`Searching for ${query}`)
@@ -70,6 +70,9 @@ server.get('/api/jobs', async (req, res, next) => {
         $search: `${query}`,
       },
     })
+    if (!query) {
+      return res.status(200).json(await JobPosting.find({}))
+    }
     res.status(200).json(jobs)
   } catch (error) {
     next(error)
