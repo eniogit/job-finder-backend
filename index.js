@@ -3,6 +3,8 @@ const joi = require('joi')
 const express = require('express')
 const server = express()
 
+const cors = require('cors')
+
 const mongoose = require('mongoose')
 const JobPosting = require('./JobPosting')
 
@@ -12,6 +14,8 @@ mongoose.connect('mongodb://db:27017/jobs').then(() => {
     console.log('Server listening on port 8000')
   })
 })
+
+server.use(cors())
 
 server.use(express.json())
 server.use(express.urlencoded({ extended: true }))
