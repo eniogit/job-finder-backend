@@ -82,3 +82,17 @@ server.get('/api/jobs', async (req, res, next) => {
     next(error)
   }
 })
+
+// Get a job posting by id
+server.get('/api/jobs/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const job = await JobPosting.findById(id)
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' })
+    }
+    res.status(200).json(job)
+  } catch (error) {
+    next(error)
+  }
+})
