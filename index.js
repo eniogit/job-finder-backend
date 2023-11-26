@@ -25,6 +25,7 @@ server.post('/api/jobs', async (req, res, next) => {
   try {
     const jobPostingSchema = joi
       .object({
+        expLevel: joi.string().valid('junior', 'intermediate', 'senior').required(),
         title: joi.string().required(),
         description: joi.string().required(),
         salary: joi.object({
@@ -65,20 +66,45 @@ server.post('/api/jobs', async (req, res, next) => {
 server.get('/api/jobs', async (req, res, next) => {
   try {
     const searchSchema = joi.object({
-      query: joi.string().optional(),
+      query: joi.string().optional().default(null),
+      sort: joi.string().valid('salary', 'date').default('date'),
+      expLevel: joi.string().valid('all', 'junior', 'intermediate', 'senior').default('all'),
     })
-    const { query } = await searchSchema.validateAsync(req.query)
-    console.log(`Searching for ${query}`)
-    const jobs = await JobPosting.find({
-      $text: {
-        $search: `${query}`,
-      },
-    })
-    if (!query) {
-      return res.status(200).json(await JobPosting.find({}))
+    const aggregations = []
+    const { query, sort, expLevel } = await searchSchema.validateAsync(req.query)
+    if (query) {
+      aggregations.push({
+        $match: {
+          $text: {
+            $search: query,
+          },
+        },
+      })
     }
+    if (expLevel !== 'all') {
+      aggregations.push({
+        $match: {
+          expLevel,
+        },
+      })
+    }
+    if (sort === 'salary') {
+      aggregations.push({
+        $sort: {
+          'salary.min': -1,
+        },
+      })
+    } else if (sort === 'date') {
+      aggregations.push({
+        $sort: {
+          createdAt: -1,
+        },
+      })
+    }
+    const jobs = await JobPosting.aggregate(aggregations)
     res.status(200).json(jobs)
   } catch (error) {
+    console.error(error)
     next(error)
   }
 })

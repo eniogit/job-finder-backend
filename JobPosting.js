@@ -1,6 +1,11 @@
 const mongoose = require('mongoose')
 
 const JobPostingSchema = new mongoose.Schema({
+  expLevel: {
+    type: String,
+    enum: ['junior', 'intermediate', 'senior'],
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -61,6 +66,8 @@ const JobPostingSchema = new mongoose.Schema({
       default: null,
     },
   },
+}, {
+  timestamps: true,
 })
 
 JobPostingSchema.index({
